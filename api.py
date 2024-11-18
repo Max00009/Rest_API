@@ -11,7 +11,7 @@ api=Api(app)
 
 class UserModel(db.Model):
      id=db.Column(db.Integer,primary_key=True)
-     name=db.Column(db.String(80),unique=True,nullable=False)
+     name=db.Column(db.String(80),nullable=False)
      email=db.Column(db.String(80),unique=True,nullable=False)
 
      def __repr__(self):
@@ -35,9 +35,12 @@ class Users(Resource):
      def get(self):
         users=UserModel.query.all()
         return users
-
+     @marshal_with(userFields)
      def post(self):
         args=user_args.parse_args()
+        existing_user=UserModel.query.filter_by(email=args['email']).first()
+        if existing_user:
+           abort(404 ,message="email already exists")
         user=UserModel(name=args['name'], email=args['email'])
         db.session.add(user)
         db.session.commit()
